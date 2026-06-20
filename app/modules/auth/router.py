@@ -27,8 +27,8 @@ def login(response: Response, db: db_dependency, form_data: OAuth2PasswordReques
         key='refresh_token',
         value=token_data['refresh_token'],
         httponly=True,
-        secure=False,
-        samesite='lax'
+        secure=True,
+        samesite='none'
     )
     
     return token_data
