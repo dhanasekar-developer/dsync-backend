@@ -65,7 +65,7 @@ class AuthService:
         
         hashed_token = self.__hash_token(refresh_token)
 
-        token_record = db.scalar(select(RefreshToken).where(RefreshToken.token == hashed_token))
+        token_record = db.execute(select(RefreshToken).where(RefreshToken.token == hashed_token)).scalar_one_or_none()
 
         if token_record:
             token_record.revoked = True
