@@ -49,4 +49,7 @@ class ChatParticipant(Base):
     last_read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
-    __table_args__ = (UniqueConstraint('chat_id', 'user_id', name='uq_chat_user'), )
+    __table_args__ = (
+        UniqueConstraint('chat_id', 'user_id', name='uq_chat_user'), 
+    )
+

@@ -34,4 +34,3 @@ class Message(Base):
     sender_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('user_profiles.user_id', ondelete='CASCADE'), index=True)
     sender: Mapped['UserProfile'] = relationship(back_populates='messages')
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
-
