@@ -1,3 +1,4 @@
+from  datetime import datetime, timezone
 from uuid import UUID
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy import select, or_, update
@@ -87,3 +88,13 @@ class UsersService:
         db.execute(update(UserProfile).where(UserProfile.user_id == user_id).values(password = hashed_password))
 
         db.commit()
+
+    def update_last_seen(self, user_id: UUID, db: Session):
+
+        last_seen_time = datetime.now(timezone.utc)
+
+        db.execute(update(UserProfile).where(UserProfile.user_id == user_id).values(last_seen = last_seen_time))
+
+        db.commit()
+
+        return last_seen_time.isoformat()

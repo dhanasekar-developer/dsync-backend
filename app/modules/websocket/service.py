@@ -5,15 +5,17 @@ from sqlalchemy import select
 from app.modules.messages.service import MessagesService
 from app.modules.chats.service import ChatsService
 from app.modules.messages.schemas import CreateMessage, MessageResponse
-from app.modules.chats.schemas import ChatParticipantResponse
 from app.modules.chats.models import Chat, ChatParticipant
 from app.modules.messages.models import Message
+from app.modules.users.service import UsersService
 from .manager import manager
 
 
 messages_service = MessagesService()
 
 chats_service = ChatsService()
+
+users_service = UsersService()
 
 class SocketChatService:
 
@@ -56,8 +58,7 @@ class SocketChatService:
 
             await manager.send_to_user(str(participant.last_delivered_message.sender_id), payload)
 
-    async def sync_delivered_message(self, user_id, db: Session):
-        user_id = UUID(user_id)
+    async def sync_delivered_message(self, user_id: UUID, db: Session):
 
         chats = db.execute(
             select(Chat)
@@ -84,4 +85,55 @@ class SocketChatService:
 
                 await self.handle_received_message(payload, db)
 
-            
+    async def send_initial_presence(self, user_id: UUID, db: Session):
+        try:
+            related_users = chats_service.get_related_users_with_last_seen(user_id, db)
+
+            users = [ { **user, 'is_online': manager.is_online(str(user['user_id'])) } for user in related_users ]
+            print('users-------------', users)
+
+            await manager.send_to_user(
+                str(user_id),
+                {
+                    'type': 'presence_sync',
+                    'users': users
+                }
+            )
+        except Exception as e:
+            print('err-------------', e)
+
+    async def notify_online(self, user_id: UUID, db: Session):
+
+        related_users = chats_service.get_related_users(user_id, db)
+
+        payload = {
+            'type': 'presence_update',
+            'data': {
+                'user_id': str(user_id),
+                'is_online': True,
+                'last_seen': None
+            }
+        }
+
+        for participant_id in related_users:
+
+            await manager.send_to_user(str(participant_id), payload)
+
+    async def notify_offline(self, user_id: UUID, db: Session):
+        
+        related_users = chats_service.get_related_users(user_id, db)
+
+        last_seen_time = users_service.update_last_seen(user_id, db)
+
+        payload = {
+            'type': 'presence_update',
+            'data': {
+                'user_id': str(user_id),
+                'is_online': False,
+                'last_seen': last_seen_time
+            }
+        }
+
+        for participant_id in related_users:
+
+            await manager.send_to_user(str(participant_id), payload)

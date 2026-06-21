@@ -36,10 +36,16 @@ async def websocket_endpoint(websocket: WebSocket, db: db_dependency):
         user_id = str(token_data['sub'])
 
         await manager.connect(user_id, websocket)
-        await socket_service.sync_delivered_message(user_id, db)
-
+        await socket_service.notify_online(UUID(user_id), db)
+        
         while True:
             data = await websocket.receive_json()
+
+            if data['type'] == 'ready':
+                await socket_service.sync_delivered_message(UUID(user_id), db)
+                await socket_service.send_initial_presence(UUID(user_id), db)
+
+                continue
 
             data = { **data, 'user_id': UUID(user_id)}
 
@@ -61,4 +67,7 @@ async def websocket_endpoint(websocket: WebSocket, db: db_dependency):
     finally:
         if user_id:
             manager.disconnect(user_id, websocket)
+            if not manager.is_online(user_id):
+                await socket_service.notify_offline(UUID(user_id), db)
+
 

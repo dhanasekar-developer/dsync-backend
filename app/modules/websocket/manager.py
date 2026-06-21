@@ -12,6 +12,10 @@ class ConnectionManager:
 
         self.connections[user_id].add(websocket)
 
+    def is_online(self, user_id) -> bool:
+
+        return user_id in self.connections
+
     def disconnect(self, user_id: str, websocket: WebSocket):
         sockets: set[WebSocket] = self.connections.get(user_id)
 
@@ -33,7 +37,7 @@ class ConnectionManager:
             try:
                 await websocket.send_json(payload)
 
-            except Exception:
+            except Exception as e:
                 dead_connections.append(websocket)
 
         for websocket in dead_connections:

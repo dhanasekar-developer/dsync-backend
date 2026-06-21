@@ -27,6 +27,7 @@ class UserProfile(Base):
     chats: Mapped[list['Chat']] = relationship(back_populates='created_by')
     chat_participants: Mapped[list['ChatParticipant']] = relationship(back_populates='user', cascade='all, delete-orphan')
     messages: Mapped[list['Message']] = relationship(back_populates='sender', cascade='all, delete-orphan')
+    last_seen: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         UniqueConstraint( "email", name='uq_user_email' ),

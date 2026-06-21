@@ -123,7 +123,52 @@ class ChatsService:
             ).scalars().all()
         
         return [ participant.user_id for participant in participants  ]
+    
+    def get_related_users(self, user_id: UUID, db: Session):
+
+        chats = db.execute(
+            select(Chat)
+            .where(
+                Chat.chat_participants.any(ChatParticipant.user_id == user_id)
+            )
+            .options(
+                selectinload(Chat.chat_participants)
+            )
+        ).scalars().all()
+
+        users = set()
+
+        for chat in chats:
+            for participant in chat.chat_participants:
+                if participant.user_id != user_id:
+                    users.add(participant.user_id)
         
+        return users
+    
+    def get_related_users_with_last_seen(self, user_id: UUID, db: Session):
+
+        chats = db.execute(
+            select(Chat)
+            .where(
+                Chat.chat_participants.any(ChatParticipant.user_id == user_id)
+            )
+            .options(
+                selectinload(Chat.chat_participants).joinedload(ChatParticipant.user)
+            )
+        ).scalars().all()
+
+        users = {}
+
+        for chat in chats:
+            for participant in chat.chat_participants:
+                if participant.user_id != user_id:
+                    users[str(participant.user_id)] = {
+                        'user_id': str(participant.user_id),
+                        'last_seen': participant.user.last_seen.isoformat()
+                    }
+                    
+        return list(users.values())
+
     def update_chat_last_message(self, chat_id, message_id, message_at, db: Session):
 
         db.execute(update(Chat).where(Chat.id == chat_id).values(last_message_id=message_id, last_message_at=message_at))
