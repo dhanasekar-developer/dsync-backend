@@ -9,12 +9,14 @@ from app.modules.websocket.router import router as websocket_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.models import *
 from app.common.request_exeption_handler import register_exeption_handler
+from app.core.logging import logger
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print('App Starting')
+    logger.info('App Starting')
     yield
-    print('App Stopping')
+    logger.info('App Stopping')
 
 app = FastAPI(
     title = settings.APP_NAME,
@@ -26,8 +28,8 @@ register_exeption_handler(app)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ['*'],
-    allow_methods = ['*'],
+    allow_origins = settings.ALLOW_ORIGINS.split(','),
+    allow_methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_credentials = True,
     allow_headers = ['*']
 )

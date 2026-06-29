@@ -9,7 +9,7 @@ from app.modules.chats.models import Chat, ChatParticipant
 from app.modules.messages.models import Message
 from app.modules.users.service import UsersService
 from .manager import manager
-
+from app.core.logging import logger
 
 messages_service = MessagesService()
 
@@ -90,7 +90,6 @@ class SocketChatService:
             related_users = chats_service.get_related_users_with_last_seen(user_id, db)
 
             users = [ { **user, 'is_online': manager.is_online(str(user['user_id'])) } for user in related_users ]
-            print('users-------------', users)
 
             await manager.send_to_user(
                 str(user_id),
@@ -100,7 +99,7 @@ class SocketChatService:
                 }
             )
         except Exception as e:
-            print('err-------------', e)
+            logger.error('send_initial_presence error ------------- :', str(e))
 
     async def notify_online(self, user_id: UUID, db: Session):
 

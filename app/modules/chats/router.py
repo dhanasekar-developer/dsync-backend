@@ -18,7 +18,6 @@ def chat_list(db: db_dependency, current_token: CurrentToken):
 
 @router.post('/create_chat', response_model=ChatResponse, status_code=status.HTTP_201_CREATED)
 def create_chat(request: CreateChat, db: db_dependency, current_token: CurrentToken):
-    print('request:--------------------------',request)
     return chats_service.create_chat(current_token['user_id'], request, db)
 
 @router.get('/chat_participants_list', response_model=list[ChatParticipantResponse], status_code=status.HTTP_200_OK)
