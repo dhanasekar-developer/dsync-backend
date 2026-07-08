@@ -14,7 +14,7 @@ import hashlib
 
 class UserService:
     def create_user(self, payload: CreateUser, db: Session):
-        existing_user = db.query(UserProfile).filter(UserProfile.email == payload.email).first()
+        existing_user = db.execute(select(UserProfile).where(UserProfile.email == payload.email)).scalar_one_or_none()
 
         if existing_user:
             raise HTTPException(
